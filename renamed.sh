@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-VERSION="0.0.1-beta"
-DIR=${1:-.}
+shopt -s nullglob
+
+VERSION="0.0.2-beta"
+DIR_RAW=${1:-.}
+DIR=$(realpath "${DIR_RAW}" )
 TMPFILE1=$(mktemp)
-TMPFILE2=$(mktemp)
 
 display_usage() {
     echo -e "renamed.sh v.${VERSION}\n"
@@ -19,19 +21,22 @@ then
 fi
 
 # get list of files in the directory
-# TODO: exclude direvtories
-ls -1 -A -N "${DIR}" > "${TMPFILE1}"
-cp "${TMPFILE1}" "${TMPFILE2}"
+BASEDIR="$PWD"
+FILES_BEFORE=()
+cd "${DIR}" || exit
+for entry in *
+do
+    if [ -f "$(realpath "${DIR}")/${entry}" ]; then
+        echo "$entry" >> "${TMPFILE1}"
+        FILES_BEFORE+=("$entry")
+    fi
+done
+cd "${BASEDIR}" || exit
 
 # open file list in editor
 "${EDITOR:-vi}" "${TMPFILE1}"
 
-# show diff
-# TODO: open diff only if the files have different content
-diff "${TMPFILE1}" "${TMPFILE2}" | less
-
 # Ceck result
-mapfile -t FILES_BEFORE < "${TMPFILE2}"
 mapfile -t FILES_AFTER < "${TMPFILE1}"
 
 BEFORE_COUNT=${#FILES_BEFORE[@]}
@@ -39,18 +44,35 @@ AFTER_COUNT=${#FILES_AFTER[@]}
 
 if [ "$AFTER_COUNT" != "$BEFORE_COUNT" ]; then
     echo "The number of files before [$BEFORE_COUNT] and after [$AFTER_COUNT] is different"
-    exit 1
+    exit 2
 fi
 
+declare -A COMMANDS
 for (( i = 0 ; i < BEFORE_COUNT ; i++))
 do
     BEFORE=$(realpath "${DIR}")/${FILES_BEFORE[$i]}
     AFTER=$(realpath "${DIR}")/${FILES_AFTER[$i]}
     if [ "$BEFORE" != "$AFTER" ]; then
-        # TODO: Add dry run mode
-        mv -n "${BEFORE}" "${AFTER}"
+        echo "mv -n -v ${BEFORE} ${AFTER}"
+        COMMANDS[$BEFORE]=$AFTER
     fi
 done
 
 # cleanup
-rm "${TMPFILE1}" "${TMPFILE2}"
+rm "${TMPFILE1}"
+
+# Check if there is somehting to do
+if [ ${#COMMANDS[@]} -eq 0 ]; then
+    echo "Nothing to do ... exiting"
+    exit 1
+fi
+
+read -p "Are you sure? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    for before in "${!COMMANDS[@]}"
+    do
+        mv -n -v "${before}" "${COMMANDS[$before]}"
+    done
+fi
