@@ -33,6 +33,11 @@ do
 done
 cd "${BASEDIR}" || exit
 
+if [ ${#FILES_BEFORE[@]} -eq 0 ]; then
+    echo "No files found in \"$DIR\" ... exiting"
+    exit 1
+fi
+
 # open file list in editor
 "${EDITOR:-vi}" "${TMPFILE1}"
 
