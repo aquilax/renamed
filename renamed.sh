@@ -67,7 +67,7 @@ if [ ${#COMMANDS[@]} -eq 0 ]; then
     exit 1
 fi
 
-read -p "Are you sure? " -n 1 -r
+read -p "Are you sure? [y|N]:" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then

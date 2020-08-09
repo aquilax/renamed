@@ -3,7 +3,7 @@
 Use your favorite text editor to mass rename files.
 
 ```
-renamed.sh v.0.0.1-beta
+renamed.sh v.0.0.2-beta
 
 Script to batch rename files in a directory using your text editor.
 WARNING: Use at your own risk.
