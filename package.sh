@@ -1,0 +1,1 @@
+BINS=renamed.sh

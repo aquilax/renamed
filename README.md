@@ -11,3 +11,13 @@ WARNING: Use at your own risk.
 Usage:
     renamed.sh [directory]
 ```
+
+## Installation
+
+
+### Using basher
+
+```
+basher install aquilax/renamed
+```
+
